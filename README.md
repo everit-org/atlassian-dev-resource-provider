@@ -79,8 +79,8 @@ The web resources are served from ```http://localhost:9990``` by default. If you
 location defined in your ```atlassian-plugin.xml``` for example: ```location="/js/myapp.js"```
 then it will be served from ```http://localhost:9990/js/myapp.js```.
 
-This default address can be changed by defining the environment variable `
-``EVERIT_DEV_RESOURCE_PROVIDER_URL```.
+This default address can be changed by defining the environment variable 
+```EVERIT_DEV_RESOURCE_PROVIDER_URL```.
 
 Example:
 
