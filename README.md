@@ -98,7 +98,7 @@ the resources are still served from the default URL.
 Please double check that you configured the environment properly and the user that runs the Jira 
 process can access it. If everything is set up correctly, restart your Jira.
 
- * Caused by: java.io.FileNotFoundException: http://wwwfoo.com/bar/js/myapp.js
+ * Caused by: java.io.FileNotFoundException: ```http://wwwfoo.com/bar/js/myapp.js```
 
 Your server that serves the resources is not running or cannot be access by your Jira. Or it can be
 a misconfigured URL.
