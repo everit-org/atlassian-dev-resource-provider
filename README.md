@@ -1,0 +1,1 @@
+# atlassian-dev-resource-provider
