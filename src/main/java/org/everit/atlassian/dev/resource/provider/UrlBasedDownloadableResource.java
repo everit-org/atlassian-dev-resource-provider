@@ -40,14 +40,14 @@ public class UrlBasedDownloadableResource implements DownloadableResource {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(UrlBasedDownloadableResource.class);
 
-  private final String baseUrl;
-
   private final ResourceLocation resourceLocation;
+
+  private final String resourceUrl;
 
   public UrlBasedDownloadableResource(
       final String baseUrl,
       final ResourceLocation resourceLocation) {
-    this.baseUrl = baseUrl;
+    this.resourceUrl = baseUrl + resourceLocation.getLocation();
     this.resourceLocation = resourceLocation;
   }
 
@@ -56,12 +56,9 @@ public class UrlBasedDownloadableResource implements DownloadableResource {
     return this.resourceLocation.getContentType();
   }
 
-  /**
-   * TBD.
-   */
-  protected InputStream getResourceAsStream(final ResourceLocation resourceLocation) {
+  private InputStream getResourceAsStream() {
     try {
-      return new URL(this.baseUrl + resourceLocation.getLocation()).openStream();
+      return new URL(this.resourceUrl).openStream();
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -76,11 +73,11 @@ public class UrlBasedDownloadableResource implements DownloadableResource {
   @Override
   public void serveResource(final HttpServletRequest request, final HttpServletResponse response)
       throws DownloadException {
-    LOGGER.debug("Serving: {}", this);
+    UrlBasedDownloadableResource.LOGGER.debug("Serving: {}", this);
 
-    final InputStream resourceStream = getResourceAsStream(this.resourceLocation);
+    final InputStream resourceStream = getResourceAsStream();
     if (resourceStream == null) {
-      LOGGER.warn("Resource not found: {}", this);
+      UrlBasedDownloadableResource.LOGGER.warn("Resource not found: {}", this);
       return;
     }
 
@@ -97,7 +94,7 @@ public class UrlBasedDownloadableResource implements DownloadableResource {
     }
 
     streamResource(resourceStream, out);
-    LOGGER.debug("Serving file done.");
+    UrlBasedDownloadableResource.LOGGER.debug("Serving file done.");
   }
 
   /**
@@ -122,16 +119,16 @@ public class UrlBasedDownloadableResource implements DownloadableResource {
       try {
         out.flush();
       } catch (final IOException e) {
-        LOGGER.debug("Error flushing output stream", e);
+        UrlBasedDownloadableResource.LOGGER.debug("Error flushing output stream", e);
       }
     }
   }
 
   @Override
   public void streamResource(final OutputStream out) throws DownloadException {
-    InputStream resourceStream = getResourceAsStream(this.resourceLocation);
+    InputStream resourceStream = getResourceAsStream();
     if (resourceStream == null) {
-      LOGGER.warn("Resource not found: {}", this);
+      UrlBasedDownloadableResource.LOGGER.warn("Resource not found: {}", this);
       return;
     }
 
