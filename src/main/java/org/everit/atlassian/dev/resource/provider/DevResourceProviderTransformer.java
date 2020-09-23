@@ -22,7 +22,7 @@ import com.atlassian.plugin.servlet.DownloadableResource;
 import com.atlassian.plugin.webresource.transformer.WebResourceTransformer;
 
 /**
- * TBD.
+ * A transformer that converts resource to {@link UrlBasedDownloadableResource}.
  */
 public class DevResourceProviderTransformer implements WebResourceTransformer {
 
@@ -33,14 +33,16 @@ public class DevResourceProviderTransformer implements WebResourceTransformer {
   @Override
   public DownloadableResource transform(
       final Element configElement,
-      final ResourceLocation location,
+      final ResourceLocation resourceLocation,
       final String filePath,
-      final DownloadableResource nextResource) {
+      final DownloadableResource originalResource) {
+
     String baseUrl = System.getenv(DevResourceProviderTransformer.BASE_URL);
     if (baseUrl == null) {
       baseUrl = DevResourceProviderTransformer.DEFAULT_BASE_URL;
     }
-    return new UrlBasedDownloadableResource(baseUrl, location);
+
+    return new UrlBasedDownloadableResource(baseUrl, resourceLocation, originalResource);
   }
 
 }

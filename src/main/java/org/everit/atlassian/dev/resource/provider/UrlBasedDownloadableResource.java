@@ -18,7 +18,6 @@ package org.everit.atlassian.dev.resource.provider;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UncheckedIOException;
 import java.net.URL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -34,21 +33,36 @@ import com.atlassian.plugin.servlet.DownloadException;
 import com.atlassian.plugin.servlet.DownloadableResource;
 
 /**
- * TBD.
+ * A {@link DownloadableResource} that serves resource from a base URL.
  */
 public class UrlBasedDownloadableResource implements DownloadableResource {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(UrlBasedDownloadableResource.class);
 
+  private final DownloadableResource originalResource;
+
   private final ResourceLocation resourceLocation;
 
   private final String resourceUrl;
 
+  /**
+   * Constructor.
+   *
+   * @param baseUrl
+   *          The base URL that will be adedd as a prefix to the resource location.
+   * @param resourceLocation
+   *          the resource location.
+   * @param originalResource
+   *          The original resource that will be served if the resource cannot be served from the
+   *          base URL.
+   */
   public UrlBasedDownloadableResource(
       final String baseUrl,
-      final ResourceLocation resourceLocation) {
+      final ResourceLocation resourceLocation,
+      final DownloadableResource originalResource) {
     this.resourceUrl = baseUrl + resourceLocation.getLocation();
     this.resourceLocation = resourceLocation;
+    this.originalResource = originalResource;
   }
 
   @Override
@@ -56,12 +70,8 @@ public class UrlBasedDownloadableResource implements DownloadableResource {
     return this.resourceLocation.getContentType();
   }
 
-  private InputStream getResourceAsStream() {
-    try {
-      return new URL(this.resourceUrl).openStream();
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
+  private InputStream getResourceAsStream() throws IOException {
+    return new URL(this.resourceUrl).openStream();
   }
 
   @Override
@@ -75,18 +85,33 @@ public class UrlBasedDownloadableResource implements DownloadableResource {
       throws DownloadException {
     UrlBasedDownloadableResource.LOGGER.debug("Serving: {}", this);
 
-    final InputStream resourceStream = getResourceAsStream();
-    if (resourceStream == null) {
-      UrlBasedDownloadableResource.LOGGER.warn("Resource not found: {}", this);
+    InputStream resourceStream;
+    try {
+      resourceStream = getResourceAsStream();
+    } catch (IOException e) {
+      UrlBasedDownloadableResource.LOGGER.warn(
+          "Failed to stream resource from URL [" + this.resourceUrl + "], "
+              + "returning original resource content [" + this.resourceLocation.getLocation()
+              + "]!");
+      this.originalResource.serveResource(request, response);
       return;
     }
 
-    final String contentType = getContentType();
+    if (resourceStream == null) {
+      UrlBasedDownloadableResource.LOGGER.warn(
+          "Failed to stream resource from URL [" + this.resourceUrl + "], "
+              + "returning original resource content [" + this.resourceLocation.getLocation()
+              + "]!");
+      this.originalResource.serveResource(request, response);
+      return;
+    }
+
+    String contentType = getContentType();
     if (StringUtils.isNotBlank(contentType)) {
       response.setContentType(contentType);
     }
 
-    final OutputStream out;
+    OutputStream out;
     try {
       out = response.getOutputStream();
     } catch (final IOException e) {
@@ -126,7 +151,20 @@ public class UrlBasedDownloadableResource implements DownloadableResource {
 
   @Override
   public void streamResource(final OutputStream out) throws DownloadException {
-    InputStream resourceStream = getResourceAsStream();
+
+    InputStream resourceStream;
+
+    try {
+      resourceStream = getResourceAsStream();
+    } catch (IOException e) {
+      UrlBasedDownloadableResource.LOGGER.warn(
+          "Failed to stream resource from URL [" + this.resourceUrl + "], "
+              + "returning original resource content [" + this.resourceLocation.getLocation()
+              + "]!");
+      this.originalResource.streamResource(out);
+      return;
+    }
+
     if (resourceStream == null) {
       UrlBasedDownloadableResource.LOGGER.warn("Resource not found: {}", this);
       return;
