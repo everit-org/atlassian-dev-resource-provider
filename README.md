@@ -103,3 +103,6 @@ process can access it. If everything is set up correctly, restart your Jira.
 Your server that serves the resources is not running or cannot be access by your Jira. Or it can be
 a misconfigured URL.
 
+ * My borwser shows me the original content of the resource.
+
+Select the "Disable cache" checkbox on the "Network" tab of the browser debugger.
